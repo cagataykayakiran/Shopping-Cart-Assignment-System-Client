@@ -13,14 +13,14 @@ import androidx.compose.ui.Modifier
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CardScreenTopBar(
+fun CartScreenTopBar(
     modifier: Modifier = Modifier,
     onClearAllClicked: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
     CenterAlignedTopAppBar(
         modifier = modifier,
-        title = { Text(text = "Cart") },
+        title = { Text(text = "Card") },
         actions = {
             IconButton(onClick = onClearAllClicked) {
                 Icon(

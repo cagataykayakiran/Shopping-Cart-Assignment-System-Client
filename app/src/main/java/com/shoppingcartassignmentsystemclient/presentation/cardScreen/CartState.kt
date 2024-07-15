@@ -2,7 +2,7 @@ package com.shoppingcartassignmentsystemclient.presentation.cardScreen
 
 import com.shoppingcartassignmentsystemclient.domain.model.Product
 
-data class CardState(
+data class CartState(
     val productsWithQuantity: MutableMap<Product, Int> = mutableMapOf(),
-    val cardLimit: Double = 899.89
+    val cartLimit: Double = 899.89
 )

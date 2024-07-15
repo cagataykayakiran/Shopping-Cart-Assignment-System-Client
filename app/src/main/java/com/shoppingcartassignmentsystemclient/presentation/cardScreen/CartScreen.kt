@@ -19,14 +19,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.shoppingcartassignmentsystemclient.presentation.cardScreen.components.CardListItem
-import com.shoppingcartassignmentsystemclient.presentation.cardScreen.components.CardScreenBottomBar
-import com.shoppingcartassignmentsystemclient.presentation.cardScreen.components.CardScreenTopBar
+import com.shoppingcartassignmentsystemclient.presentation.cardScreen.components.CartListItem
+import com.shoppingcartassignmentsystemclient.presentation.cardScreen.components.CartScreenTopBar
 import com.shoppingcartassignmentsystemclient.presentation.MainViewModel
+import com.shoppingcartassignmentsystemclient.data.remote.dto.CartRequest
+import com.shoppingcartassignmentsystemclient.presentation.cardScreen.components.CartScreenBottomBar
+import com.shoppingcartassignmentsystemclient.data.remote.dto.ProductRequest
 import com.shoppingcartassignmentsystemclient.presentation.productScreen.UIEvent
 
 @Composable
-fun CardScreen(
+fun CartScreen(
     modifier: Modifier = Modifier,
     mainViewModel: MainViewModel,
     navController: NavController
@@ -43,12 +45,12 @@ fun CardScreen(
 
     Scaffold(
         topBar = {
-            CardScreenTopBar(
+            CartScreenTopBar(
                 onClearAllClicked = { mainViewModel.onEvent(UIEvent.DeleteAllProductsFromCard) },
                 onNavigateBack = { navController.popBackStack() })
         },
         bottomBar = {
-            CardScreenBottomBar(
+            CartScreenBottomBar(
                 cardLimitState = cardLimitState.toString(),
                 totalPrice = totalPrice.toString(),
                 isPortDialogOpen = isPortDialogOpen,
@@ -60,6 +62,36 @@ fun CardScreen(
                     serverIp = ip
                     serverPort = port
                     isPortDialogOpen = false
+
+                    if (serverIp.isNotEmpty() && serverPort.isNotEmpty()) {
+                        val productsList = mutableListOf<ProductRequest>()
+
+                        for ((product, quantity) in cardProducts.productsWithQuantity) {
+                            val productRequest = ProductRequest(
+                                id = product.id,
+                                price = product.price * quantity
+                            )
+                            productsList.add(productRequest)
+                        }
+
+                        val cartData = CartRequest(
+                            cartLimit = cardLimitState,
+                            products = productsList
+                        )
+
+                        mainViewModel.onEvent(UIEvent.SendCartDataToServer(
+                            cartData = cartData,
+                            serverIp = serverIp,
+                            serverPort = serverPort
+                        ))
+                        mainViewModel.onEvent(UIEvent.ShowToast(
+                            message = "Cart sent to server"
+                        ))
+                    } else {
+                        mainViewModel.onEvent(UIEvent.ShowToast(
+                            message = "Please enter server IP and port"
+                        ))
+                    }
                 }
             )
         }
@@ -72,7 +104,7 @@ fun CardScreen(
             if (cardProducts.productsWithQuantity.isNotEmpty()) {
                 LazyColumn {
                     items(cardProducts.productsWithQuantity.toList()) { (product, quantity) ->
-                        CardListItem(
+                        CartListItem(
                             product = product,
                             quantity = quantity,
                             onDeleteClicked = {
@@ -96,3 +128,5 @@ fun CardScreen(
         }
     }
 }
+
+

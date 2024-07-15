@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.shoppingcartassignmentsystemclient.domain.model.Product
 
 @Composable
-fun CardListItem(
+fun CartListItem(
     modifier: Modifier = Modifier,
     product: Product,
     quantity: Int,
