@@ -18,8 +18,8 @@ fun PortDialog(
     onConfirm: (String, String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var ip by remember { mutableStateOf("") }
-    var port by remember { mutableStateOf("") }
+    var ip by remember { mutableStateOf("192.168.1.180") }
+    var port by remember { mutableStateOf("7575") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
