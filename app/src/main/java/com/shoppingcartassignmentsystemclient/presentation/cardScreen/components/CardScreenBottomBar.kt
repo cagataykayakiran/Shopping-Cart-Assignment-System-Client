@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-internal fun CardScreenBottomBar(
+fun CartScreenBottomBar(
     modifier: Modifier = Modifier,
     cardLimitState: String,
     totalPrice: String,

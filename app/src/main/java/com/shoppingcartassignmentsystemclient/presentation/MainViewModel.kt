@@ -1,23 +1,35 @@
 package com.shoppingcartassignmentsystemclient.presentation
 
+import android.content.Context
+import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.shoppingcartassignmentsystemclient.data.local.entity.CartEntity
 import com.shoppingcartassignmentsystemclient.domain.model.Product
 import com.shoppingcartassignmentsystemclient.domain.use_cases.DeleteProductUseCase
 import com.shoppingcartassignmentsystemclient.domain.use_cases.GetsProductUseCase
 import com.shoppingcartassignmentsystemclient.domain.use_cases.SaveProductUseCase
 import com.shoppingcartassignmentsystemclient.domain.use_cases.SearchProductUseCase
 import com.shoppingcartassignmentsystemclient.domain.use_cases.UpdateProductUseCase
-import com.shoppingcartassignmentsystemclient.presentation.cardScreen.CardState
+import com.shoppingcartassignmentsystemclient.presentation.cardScreen.CartState
+import com.shoppingcartassignmentsystemclient.data.remote.dto.CartRequest
+import com.shoppingcartassignmentsystemclient.data.remote.dto.CartResponse
+import com.shoppingcartassignmentsystemclient.domain.use_cases.SaveCartUseCase
+import com.shoppingcartassignmentsystemclient.domain.use_cases.SendCartToServerUseCase
 import com.shoppingcartassignmentsystemclient.presentation.productScreen.ProductState
 import com.shoppingcartassignmentsystemclient.presentation.productScreen.UIEvent
+import com.shoppingcartassignmentsystemclient.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,20 +38,23 @@ class MainViewModel @Inject constructor(
     private val updateProduct: UpdateProductUseCase,
     private val saveProduct: SaveProductUseCase,
     private val getProducts: GetsProductUseCase,
-    private val searchProduct: SearchProductUseCase
-): ViewModel() {
+    private val searchProduct: SearchProductUseCase,
+    private val saveCart: SaveCartUseCase,
+    private val sendCartDataToServer: SendCartToServerUseCase,
+    @ApplicationContext private val context: Context
+) : ViewModel() {
 
-    private val _products= MutableStateFlow(ProductState())
+    private val _products = MutableStateFlow(ProductState())
     val products = _products.asStateFlow()
 
-    private val _cartProducts = MutableStateFlow(CardState())
+    private val _cartProducts = MutableStateFlow(CartState())
     val cartProducts = _cartProducts.asStateFlow()
 
     private val _totalPrice = MutableStateFlow(0.0)
     val totalPrice: StateFlow<Double> get() = _totalPrice
 
-    private val _cardLimitState = MutableStateFlow(CardState().cardLimit)
-    val cardLimitState =  _cardLimitState.asStateFlow()
+    private val _cardLimitState = MutableStateFlow(CartState().cartLimit)
+    val cardLimitState = _cardLimitState.asStateFlow()
 
 
     private var searchJob: Job? = null
@@ -59,7 +74,59 @@ class MainViewModel @Inject constructor(
             is UIEvent.DeleteProductFromCard -> deleteProductFromCard(event.product)
             is UIEvent.DeleteAllProductsFromCard -> deleteAllProductsFromCard()
             is UIEvent.UpdateCardLimit -> updateCardLimit(event.limit)
+            is UIEvent.SendCartDataToServer -> sendCartDataToServer(
+                event.cartData,
+                event.serverIp,
+                event.serverPort
+            )
+
+            is UIEvent.ShowToast -> showToast(event.message)
         }
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun sendCartDataToServer(cartData: CartRequest, serverIp: String, serverPort: String) {
+        Log.d("cart data", cartData.toString())
+        Log.d("server ip", serverIp)
+        Log.d("server port", serverPort)
+        viewModelScope.launch(Dispatchers.IO) {
+            sendCartDataToServer.invoke(cartData, serverIp, serverPort).collect { result ->
+                Log.d("result", result.toString())
+                when (result) {
+                    is Resource.Error -> Log.d(result.message,"Error")
+                    is Resource.Loading -> Log.d(result.message,"Loading")
+                    is Resource.Success -> processServerResponse(result.data ?: CartResponse(emptyList()))
+                }
+            }
+        }
+    }
+
+    private suspend fun processServerResponse(response: CartResponse) {
+        Log.d("response", response.toString())
+
+        val currentDateTime =
+            DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date())
+        val soldProducts = response.cart.filter { it.isSold }
+
+        for (product in soldProducts) {
+
+            val productPrice = getProductPrice(product.id)
+
+            val cartItem = CartEntity(
+                productId = product.id,
+                price = productPrice,
+                cartDateTime = currentDateTime
+            )
+            saveCart(cartItem)
+        }
+    }
+
+    private fun getProductPrice(id: Long): Double {
+        val product = _products.value.products.find { it.id == id }
+        return product?.price ?: 0.0
     }
 
     private fun updateCardLimit(newLimit: Double) {
@@ -163,5 +230,4 @@ class MainViewModel @Inject constructor(
             calculateTotalPrice()
         }
     }
-
 }

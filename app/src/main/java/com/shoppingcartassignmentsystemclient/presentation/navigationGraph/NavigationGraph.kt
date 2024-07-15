@@ -6,7 +6,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.shoppingcartassignmentsystemclient.presentation.cardScreen.CardScreen
+import com.shoppingcartassignmentsystemclient.presentation.cardScreen.CartScreen
 import com.shoppingcartassignmentsystemclient.presentation.productScreen.ProductScreen
 import com.shoppingcartassignmentsystemclient.presentation.MainViewModel
 import com.shoppingcartassignmentsystemclient.util.Screen
@@ -31,7 +31,7 @@ fun NavigationGraph(
             )
         }
         composable(Screen.CardScreen.route) {
-            CardScreen(mainViewModel = mainViewModel, navController = navController)
+            CartScreen(mainViewModel = mainViewModel, navController = navController)
         }
     }
 }
