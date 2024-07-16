@@ -18,6 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -34,15 +36,19 @@ import androidx.navigation.NavController
 import com.shoppingcartassignmentsystemclient.domain.model.Product
 import com.shoppingcartassignmentsystemclient.presentation.MainViewModel
 import com.shoppingcartassignmentsystemclient.presentation.productScreen.components.AddProductDialogContent
+import com.shoppingcartassignmentsystemclient.presentation.productScreen.components.AppBottomBar
 import com.shoppingcartassignmentsystemclient.presentation.productScreen.components.BadgeInteractive
 import com.shoppingcartassignmentsystemclient.presentation.productScreen.components.ProductListItem
+import com.shoppingcartassignmentsystemclient.presentation.ui.theme.backgroundColor
+import com.shoppingcartassignmentsystemclient.presentation.ui.theme.primaryColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductScreen(
     modifier: Modifier = Modifier,
     mainViewModel: MainViewModel,
-    navController: NavController
+    navController: NavController,
+    showActions: Boolean = false
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var productName by remember { mutableStateOf("") }
@@ -60,18 +66,40 @@ fun ProductScreen(
     val focusManager = LocalFocusManager.current
 
     Scaffold(
+        containerColor = backgroundColor,
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(text = "Add Product") },
+                title = {
+                    if (showActions) Text(
+                        text = "Product Modify",
+                        color = Color.White
+                    ) else Text(text = "Products", color = Color.White)
+                },
                 actions = {
-                    BadgeInteractive(dataState = cartProducts.productsWithQuantity.size, navController = navController)
-                }
+                    if (!showActions)
+                        BadgeInteractive(
+                            dataState = cartProducts.productsWithQuantity.size,
+                            navController = navController
+                        )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = primaryColor
+                )
             )
         },
+        bottomBar = {
+            AppBottomBar(navController = navController)
+        },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showDialog = true }) {
-                Text(text = "+")
+            if (showActions) {
+                FloatingActionButton(
+                    onClick = { showDialog = true },
+                    containerColor = primaryColor,
+                    contentColor = Color.White
+                ) {
+                    Text(text = "+")
+                }
             }
         }
     ) {
@@ -81,7 +109,7 @@ fun ProductScreen(
                 .padding(it), contentAlignment = Alignment.Center
         ) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -115,7 +143,11 @@ fun ProductScreen(
                             onAddToCartClicked = {
                                 mainViewModel.onEvent(UIEvent.AddProductToCard(product))
                             },
-                            quantity = cartProducts.productsWithQuantity[product] ?: 0
+                            quantity = cartProducts.productsWithQuantity[product] ?: 0,
+                            onUpdatedToCartClicked = {
+                                mainViewModel.onEvent(UIEvent.UpdateProductQuantity(product))
+                            },
+                            showActions = showActions
                         )
                     }
                 }
@@ -130,8 +162,14 @@ fun ProductScreen(
 
         if (showDialog) {
             AlertDialog(
+                containerColor = primaryColor,
                 onDismissRequest = { showDialog = false },
-                title = { Text(text = if (selectedProductId == 0L) "Add New Product" else "Update Product") },
+                title = {
+                    Text(
+                        text = if (selectedProductId == 0L) "Add New Product" else "Update Product",
+                        color = backgroundColor
+                    )
+                },
                 text = {
                     AddProductDialogContent(
                         productName = productName,
@@ -175,12 +213,15 @@ fun ProductScreen(
                         },
                         enabled = errorProductName.isEmpty() && errorProductPrice.isEmpty()
                     ) {
-                        Text(text = if (selectedProductId == 0L) "Add" else "Update")
+                        Text(
+                            text = if (selectedProductId == 0L) "Add" else "Update",
+                            color = backgroundColor
+                        )
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDialog = false }) {
-                        Text(text = "Cancel")
+                        Text(text = "Cancel", color = backgroundColor)
                     }
                 }
             )

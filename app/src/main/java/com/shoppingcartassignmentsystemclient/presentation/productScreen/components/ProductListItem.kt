@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.shoppingcartassignmentsystemclient.domain.model.Product
+import com.shoppingcartassignmentsystemclient.presentation.ui.theme.secondaryColor
 
 @Composable
 fun ProductListItem(
@@ -40,7 +42,9 @@ fun ProductListItem(
     onDeleteClicked: () -> Unit,
     onUpdateClicked: (Product) -> Unit,
     onAddToCartClicked: (Product) -> Unit,
-    quantity: Int
+    onUpdatedToCartClicked: (Product) -> Unit,
+    quantity: Int,
+    showActions: Boolean
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var updatedProductName by remember { mutableStateOf(product.name) }
@@ -53,10 +57,12 @@ fun ProductListItem(
             .fillMaxWidth()
             .padding(13.dp)
             .clip(RoundedCornerShape(18.dp))
-            .background(Color.LightGray)
+            .background(secondaryColor)
             .clickable {
-                showDialog = true
-                Log.d("product clicked", product.id.toString())
+                if (showActions) {
+                    showDialog = true
+                    Log.d("product clicked", product.id.toString())
+                }
             }
     ) {
         Row(
@@ -94,34 +100,61 @@ fun ProductListItem(
                 }
             }
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                IconButton(
-                    onClick = { onDeleteClicked() },
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete"
-                    )
+                if (showActions) {
+                    IconButton(
+                        onClick = { onDeleteClicked() },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete"
+                        )
+                    }
                 }
-                IconButton(
-                    onClick = { onAddToCartClicked(
-                        Product(
-                        id = product.id,
-                        name = product.name,
-                        price = product.price
-                    )
-                    )
-                        Log.d("add to cart", product.name) },
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add to cart"
-                    )
+                if (!showActions) {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = { onAddToCartClicked(
+                                Product(
+                                    id = product.id,
+                                    name = product.name,
+                                    price = product.price
+                                )
+                            )
+                                Log.d("add to cart", product.name) },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add to cart"
+                            )
+                        }
+                        Text(text = "$quantity")
+                        IconButton(
+                            onClick = { onUpdatedToCartClicked(
+                                Product(
+                                    id = product.id,
+                                    name = product.name,
+                                    price = product.price
+                                )
+                            )
+                                Log.d("update to cart", product.name) },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Remove,
+                                contentDescription = "Add to cart"
+                            )
+                        }
+
+                    }
                 }
-                Text(text = "Quantity: $quantity")
+
             }
+
         }
     }
 

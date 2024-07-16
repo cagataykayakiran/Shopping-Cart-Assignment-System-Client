@@ -26,6 +26,7 @@ import com.shoppingcartassignmentsystemclient.data.remote.dto.CartRequest
 import com.shoppingcartassignmentsystemclient.presentation.cardScreen.components.CartScreenBottomBar
 import com.shoppingcartassignmentsystemclient.data.remote.dto.ProductRequest
 import com.shoppingcartassignmentsystemclient.presentation.productScreen.UIEvent
+import com.shoppingcartassignmentsystemclient.presentation.ui.theme.backgroundColor
 
 @Composable
 fun CartScreen(
@@ -44,6 +45,7 @@ fun CartScreen(
     var isPortDialogOpen by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = backgroundColor,
         topBar = {
             CartScreenTopBar(
                 onClearAllClicked = { mainViewModel.onEvent(UIEvent.DeleteAllProductsFromCard) },
@@ -51,7 +53,7 @@ fun CartScreen(
         },
         bottomBar = {
             CartScreenBottomBar(
-                cardLimitState = cardLimitState.toString(),
+                cardLimitState = cardLimitState.cartLimit.toString(),
                 totalPrice = totalPrice.toString(),
                 isPortDialogOpen = isPortDialogOpen,
                 onSendClicked = {
@@ -75,23 +77,32 @@ fun CartScreen(
                         }
 
                         val cartData = CartRequest(
-                            cartLimit = cardLimitState,
+                            cartLimit = cardLimitState.cartLimit,
                             products = productsList
                         )
 
-                        mainViewModel.onEvent(UIEvent.SendCartDataToServer(
-                            cartData = cartData,
-                            serverIp = serverIp,
-                            serverPort = serverPort
-                        ))
-                        mainViewModel.onEvent(UIEvent.ShowToast(
-                            message = "Cart sent to server"
-                        ))
+                        mainViewModel.onEvent(
+                            UIEvent.SendCartDataToServer(
+                                cartData = cartData,
+                                serverIp = serverIp,
+                                serverPort = serverPort
+                            )
+                        )
+                        mainViewModel.onEvent(
+                            UIEvent.ShowToast(
+                                message = "Cart sent to server"
+                            )
+                        )
                     } else {
-                        mainViewModel.onEvent(UIEvent.ShowToast(
-                            message = "Please enter server IP and port"
-                        ))
+                        mainViewModel.onEvent(
+                            UIEvent.ShowToast(
+                                message = "Please enter server IP and port"
+                            )
+                        )
                     }
+                },
+                updateCardLimit = {
+                    mainViewModel.onEvent(UIEvent.UpdateCardLimit(it))
                 }
             )
         }

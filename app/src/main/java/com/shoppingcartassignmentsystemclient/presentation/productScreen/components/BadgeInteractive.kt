@@ -18,8 +18,7 @@ fun BadgeInteractive(dataState: Int, navController: NavController) {
     BadgedBox(
         badge = {
             Badge(
-                containerColor = Color.White,
-                contentColor = if (dataState == 0) Color.Black else Color.Red
+                contentColor = if (dataState == 0) Color.Black else Color.White
             ) {
                 Text(text = "$dataState", fontSize = 15.sp)
             }
@@ -28,7 +27,8 @@ fun BadgeInteractive(dataState: Int, navController: NavController) {
         IconButton(onClick = { navController.navigate(Screen.CardScreen.route) }) {
             Icon(
                 imageVector = Icons.Default.ShoppingCart,
-                contentDescription = "Shopping Cart"
+                contentDescription = "Shopping Cart",
+                tint = Color.White
             )
         }
     }

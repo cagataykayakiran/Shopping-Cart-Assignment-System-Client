@@ -8,9 +8,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.shoppingcartassignmentsystemclient.presentation.ui.theme.backgroundColor
 
 @Composable
 fun AddProductDialogContent(
@@ -32,7 +32,7 @@ fun AddProductDialogContent(
             modifier = Modifier.fillMaxWidth(),
         )
         if (errorProductName.isNotEmpty()) {
-            Text(text = errorProductName, color = Color.Red)
+            Text(text = errorProductName, color = backgroundColor)
         }
         TextField(
             value = productPrice,
@@ -43,7 +43,7 @@ fun AddProductDialogContent(
             modifier = Modifier.fillMaxWidth(),
         )
         if (errorProductPrice.isNotEmpty()) {
-            Text(text = errorProductPrice, color = Color.Red)
+            Text(text = errorProductPrice, color = backgroundColor)
         }
     }
 }

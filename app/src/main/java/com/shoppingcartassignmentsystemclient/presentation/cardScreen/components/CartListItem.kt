@@ -47,14 +47,14 @@ fun CartListItem(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Name:")
+                    Text(text = "Name: ")
                     Text(text = product.name)
                 }
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Price:")
+                    Text(text = "Price: ")
                     Text(text = product.price.toString())
                 }
             }
@@ -63,7 +63,7 @@ fun CartListItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 IconButton(onClick = onDeleteClicked) {
-                    Icon(imageVector = Icons.Default.Delete, contentDescription = "a")
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
                 }
                 Box(
                     modifier = Modifier.size(25.dp, 25.dp),
@@ -72,7 +72,7 @@ fun CartListItem(
                     Text(text = quantity.toString())
                 }
                 IconButton(onClick = onAddClicked) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "a")
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
                 }
             }
 

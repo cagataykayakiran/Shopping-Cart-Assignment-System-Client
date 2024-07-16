@@ -8,8 +8,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.shoppingcartassignmentsystemclient.presentation.ui.theme.backgroundColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,8 +21,11 @@ fun CartScreenTopBar(
     onNavigateBack: () -> Unit
 ) {
     CenterAlignedTopAppBar(
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = backgroundColor
+        ),
         modifier = modifier,
-        title = { Text(text = "Card") },
+        title = { Text(text = "Shopping Cart") },
         actions = {
             IconButton(onClick = onClearAllClicked) {
                 Icon(
