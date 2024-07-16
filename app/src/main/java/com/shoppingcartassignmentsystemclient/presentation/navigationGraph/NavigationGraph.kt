@@ -22,9 +22,9 @@ fun NavigationGraph(
     NavHost(
         modifier = modifier,
         navController = navController,
-        startDestination = Screen.AddProductScreen.route
+        startDestination = Screen.MainScreen.route
     ) {
-        composable(Screen.AddProductScreen.route) {
+        composable(Screen.MainScreen.route) {
             ProductScreen(
                 navController = navController,
                 mainViewModel = mainViewModel,
@@ -32,6 +32,13 @@ fun NavigationGraph(
         }
         composable(Screen.CardScreen.route) {
             CartScreen(mainViewModel = mainViewModel, navController = navController)
+        }
+        composable(Screen.ProductModifyScreen.route) {
+            ProductScreen(
+                navController = navController,
+                mainViewModel = mainViewModel,
+                showActions = true
+            )
         }
     }
 }
