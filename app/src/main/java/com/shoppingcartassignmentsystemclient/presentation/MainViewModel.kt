@@ -5,7 +5,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.shoppingcartassignmentsystemclient.data.local.entity.CartEntity
 import com.shoppingcartassignmentsystemclient.domain.model.Product
 import com.shoppingcartassignmentsystemclient.domain.use_cases.DeleteProductUseCase
 import com.shoppingcartassignmentsystemclient.domain.use_cases.GetsProductUseCase
@@ -15,8 +14,10 @@ import com.shoppingcartassignmentsystemclient.domain.use_cases.UpdateProductUseC
 import com.shoppingcartassignmentsystemclient.presentation.cardScreen.CartState
 import com.shoppingcartassignmentsystemclient.data.remote.dto.CartRequest
 import com.shoppingcartassignmentsystemclient.data.remote.dto.CartResponse
+import com.shoppingcartassignmentsystemclient.domain.model.Cart
 import com.shoppingcartassignmentsystemclient.domain.use_cases.SaveCartUseCase
 import com.shoppingcartassignmentsystemclient.domain.use_cases.SendCartToServerUseCase
+import com.shoppingcartassignmentsystemclient.presentation.cardScreen.CartLimitState
 import com.shoppingcartassignmentsystemclient.presentation.productScreen.ProductState
 import com.shoppingcartassignmentsystemclient.presentation.productScreen.UIEvent
 import com.shoppingcartassignmentsystemclient.util.Resource
@@ -53,7 +54,7 @@ class MainViewModel @Inject constructor(
     private val _totalPrice = MutableStateFlow(0.0)
     val totalPrice: StateFlow<Double> get() = _totalPrice
 
-    private val _cardLimitState = MutableStateFlow(CartState().cartLimit)
+    private val _cardLimitState = MutableStateFlow(CartLimitState())
     val cardLimitState = _cardLimitState.asStateFlow()
 
 
@@ -71,7 +72,7 @@ class MainViewModel @Inject constructor(
             is UIEvent.SaveProduct -> saveProduct(event.product)
             is UIEvent.SearchProduct -> searchProducts(event.query)
             is UIEvent.AddProductToCard -> addCartProduct(event.product)
-            is UIEvent.DeleteProductFromCard -> deleteProductFromCard(event.product)
+            is UIEvent.DeleteProductFromCard -> deleteProductFromCart(event.product)
             is UIEvent.DeleteAllProductsFromCard -> deleteAllProductsFromCard()
             is UIEvent.UpdateCardLimit -> updateCardLimit(event.limit)
             is UIEvent.SendCartDataToServer -> sendCartDataToServer(
@@ -79,9 +80,27 @@ class MainViewModel @Inject constructor(
                 event.serverIp,
                 event.serverPort
             )
-
             is UIEvent.ShowToast -> showToast(event.message)
+            is UIEvent.UpdateProductQuantity -> updateProductQuantity(event.product)
         }
+    }
+
+    private fun updateProductQuantity(product: Product) {
+        val currentState = _cartProducts.value
+        val updatedMap = currentState.productsWithQuantity.toMutableMap()
+
+        if (updatedMap.containsKey(product)) {
+            val currentQuantity = updatedMap.getValue(product)
+            if (currentQuantity > 1) {
+                updatedMap[product] = currentQuantity - 1
+            } else {
+                updatedMap.remove(product)
+            }
+        }
+
+        _cartProducts.value = currentState.copy(productsWithQuantity = updatedMap)
+        calculateTotalPrice()
+
     }
 
     private fun showToast(message: String) {
@@ -115,7 +134,7 @@ class MainViewModel @Inject constructor(
 
             val productPrice = getProductPrice(product.id)
 
-            val cartItem = CartEntity(
+            val cartItem = Cart(
                 productId = product.id,
                 price = productPrice,
                 cartDateTime = currentDateTime
@@ -130,7 +149,7 @@ class MainViewModel @Inject constructor(
     }
 
     private fun updateCardLimit(newLimit: Double) {
-        _cardLimitState.value = newLimit
+        _cardLimitState.value = _cardLimitState.value.copy(cartLimit = newLimit)
     }
 
     private fun calculateTotalPrice() {
@@ -145,7 +164,7 @@ class MainViewModel @Inject constructor(
         calculateTotalPrice()
     }
 
-    private fun deleteProductFromCard(product: Product) {
+    private fun deleteProductFromCart(product: Product) {
         val currentState = _cartProducts.value
         val updatedMap = currentState.productsWithQuantity.toMutableMap()
 
@@ -220,8 +239,20 @@ class MainViewModel @Inject constructor(
     private fun deleteProduct(product: Product) {
         viewModelScope.launch(Dispatchers.IO) {
             deleteProduct.invoke(product)
+            deleteProductFromCartAfterDeletion(product)
             calculateTotalPrice()
         }
+    }
+
+    private fun deleteProductFromCartAfterDeletion(product: Product) {
+        val currentState = _cartProducts.value
+        val updatedMap = currentState.productsWithQuantity.toMutableMap()
+
+        if (updatedMap.containsKey(product)) {
+            updatedMap.remove(product)
+        }
+
+        _cartProducts.value = currentState.copy(productsWithQuantity = updatedMap)
     }
 
     private fun saveProduct(product: Product) {
